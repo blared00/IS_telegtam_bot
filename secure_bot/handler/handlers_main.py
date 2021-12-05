@@ -32,6 +32,7 @@ async def main_(callback_query: types.CallbackQuery):
     state=(
         BotState.MAIN,
         BotState.GAME,
+        BotState.NEWLESSON,
     ),
 )
 async def main_menu_back(callback_query: types.CallbackQuery, state: FSMContext):

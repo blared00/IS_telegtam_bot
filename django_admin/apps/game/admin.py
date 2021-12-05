@@ -46,5 +46,6 @@ class QuestionCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(MemberCategoryScore)
 class QMemberCategoryScoreAdmin(admin.ModelAdmin):
-    """Отображение категорий вопросов в панели администратора."""
-    pass
+    """Отображение баллов пользователей в панели администратора."""
+    list_display = ('member', 'category', 'amount')
+    list_filter = ('category', )

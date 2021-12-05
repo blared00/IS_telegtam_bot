@@ -57,6 +57,27 @@ async def insert_user(conn, user_id: int, user_name: str, user_name_tg: str):
         user_name_tg,
         user_name,
     )
+    await conn.execute(
+        """
+        INSERT INTO member_score(amount, category_id, member_id) VALUES (0,1,$1)
+        """,
+        user_id,
+
+    )
+    await conn.execute(
+        """
+        INSERT INTO member_score(amount, category_id, member_id) VALUES (1,2,$1)
+        """,
+        user_id,
+
+    )
+    await conn.execute(
+        """
+        INSERT INTO member_score(amount, category_id, member_id) VALUES (0,1,$1);
+        """,
+        user_id,
+
+    )
 
 
 @psycopg2_cursor(DATABASE)

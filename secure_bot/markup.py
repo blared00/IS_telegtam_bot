@@ -73,3 +73,13 @@ INLINE_KB_BACKGAME = InlineKeyboardMarkup(row_width=1).insert(
     InlineKeyboardButton(random.choice(liters.ONWORDS_GAME).capitalize(), callback_data="mobail_test")).insert(
     InlineKeyboardButton("Вернуться в главное меню", callback_data="back_main_btn"))
 
+"""Продолжить играть."""
+INLINE_KB_LESSON = InlineKeyboardMarkup(row_width=1).insert(
+    InlineKeyboardButton('Урок №1', callback_data="lesson_1")).insert(
+    InlineKeyboardButton("Урок №2", callback_data="lesson_2")).insert(
+    InlineKeyboardButton("Урок №3", callback_data="lesson_3"))
+
+"""Вперед назад"""
+INLINE_KB_RIGHT = InlineKeyboardMarkup().insert(
+    InlineKeyboardButton('<Назад', callback_data="back")).insert(
+    InlineKeyboardButton("Вперед>", callback_data="go"))

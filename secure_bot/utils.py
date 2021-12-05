@@ -41,6 +41,7 @@ class BotState(StatesGroup):
     EDUCATION = State()
     GAME = State()
     MAIN = State()
+    NEWLESSON = State()
 
 
 
@@ -151,18 +152,3 @@ async def valid_parse_mode(func, *args, **kwargs):
         result = await func(*args, **kwargs)
     return result
 
-
-# CONNECT_POLL = {
-#     btn: poll
-#     for btn, poll in list(zip([kb[1] for kb in markup.HOW_LONG_KB], (None, 1, 2, 3)))
-# }
-#
-# POLL_STATE = {
-#     btn: poll
-#     for btn, poll in list(
-#         zip(
-#             [kb[1] for kb in markup.HOW_LONG_KB],
-#             (BotState.MAIN, BotState.POLL1, BotState.POLL2, BotState.POLL3),
-#         )
-#     )
-# }
