@@ -1,0 +1,1 @@
+[{"model": "poll.poll", "pk": 1, "fields": {"title": "Мобильные телефоны"}}, {"model": "poll.poll", "pk": 2, "fields": {"title": "Мессенджеры"}}, {"model": "poll.poll", "pk": 3, "fields": {"title": "Пароли"}}]

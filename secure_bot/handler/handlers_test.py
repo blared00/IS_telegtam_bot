@@ -1,5 +1,3 @@
-from aiogram.utils.exceptions import TelegramAPIError
-
 import async_db
 import markup
 import liters
@@ -7,11 +5,11 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from create_bot import dp
-from utils import BotState, create_pin_message, call_main
+from utils import BotState, create_pin_message
 
 
 @dp.callback_query_handler(
-    lambda c: c.data == 'back_main_btn',
+    lambda c: c.data == "back_main_btn",
     state=BotState.ACCEPT_NAME,
 )
 async def go_to_mainmenu(callback_query: types.CallbackQuery, state: FSMContext):
@@ -36,7 +34,7 @@ async def go_to_mainmenu(callback_query: types.CallbackQuery, state: FSMContext)
 
 
 @dp.callback_query_handler(
-    lambda c: c.data == 'ofcourse_btn',
+    lambda c: c.data == "ofcourse_btn",
     state=BotState.ACCEPT_NAME,
 )
 async def how_long_work(callback_query: types.CallbackQuery, state: FSMContext):
@@ -44,25 +42,27 @@ async def how_long_work(callback_query: types.CallbackQuery, state: FSMContext):
     _____
     Кнопки:
     Срабатывание - "Конечно"
-    Создает - 1 вопрос из POLL№ в соответствии с выбранным вариантом ответа на вопрос "Как долго работаешь?"
+    Создает - 1 вопрос из тестирования в соответствии с уровнем знаний
     _____
     Переходит в состояние POLL№.
     """
     await callback_query.answer()
     await state.update_data(how_long_work=callback_query.data)
     questions_list = []
-    cat_id = 1
-    request_q = await async_db.seclect_cup_question(cat_id)
-    if request_q:
-        for q in request_q:
-            questions_list.append(tuple(q))
+    for cat_id in range(1, 3):
+        request_q = await async_db.seclect_cup_question(cat_id)
+        if request_q:
+            for q in request_q:
+                questions_list.append(tuple(q))
 
     question_id, text, description = tuple(questions_list.pop())
     options = await async_db.seclect_options_question(question_id)
     print(list(map(lambda x: x[1], options)))
     await callback_query.message.edit_text(
         text,
-        reply_markup=markup.range_inline_kb(len(options), "g",list(map(lambda x: x[1], options))),
+        reply_markup=markup.range_inline_kb(
+            len(options), "g", list(map(lambda x: x[1], options))
+        ),
         parse_mode=types.ParseMode.MARKDOWN,
         disable_web_page_preview=True,
     )
@@ -72,7 +72,7 @@ async def how_long_work(callback_query: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(
     lambda c: c.data in map(lambda x: str(x) + "g", range(1, 6)),
-    state=BotState.EDUCATION
+    state=BotState.EDUCATION,
 )
 async def poll_func_kb(callback_query: types.CallbackQuery, state: FSMContext):
     """Записывает результат ответа на предыдущий вопрос в БД , выдает новый вопрос.
@@ -84,13 +84,15 @@ async def poll_func_kb(callback_query: types.CallbackQuery, state: FSMContext):
     """
     await callback_query.answer()
     user_data = await state.get_data()
-    question_list =list(user_data['first_test'])
+    question_list = list(user_data["first_test"])
     try:
         question_id, text, description = question_list.pop()
         options = await async_db.seclect_options_question(question_id)
         await callback_query.message.edit_text(
             text,
-            reply_markup=markup.range_inline_kb(len(options), "g", list(map(lambda x: x[1], options))),
+            reply_markup=markup.range_inline_kb(
+                len(options), "g", list(map(lambda x: x[1], options))
+            ),
             parse_mode=types.ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -103,7 +105,8 @@ async def poll_func_kb(callback_query: types.CallbackQuery, state: FSMContext):
         )
         new_mes = await callback_query.bot.send_message(
             callback_query.message.chat.id,
-            'Ты хорошо отвечал, но все же необходимо подкрепить свои знания для повышения уровня\n' + liters.MAIN_MENU,
+            "Ты хорошо отвечал, но все же необходимо подкрепить свои знания для повышения уровня\n"
+            + liters.MAIN_MENU,
             reply_markup=markup.INLINE_KB_MAIN,
         )
         await state.update_data(
