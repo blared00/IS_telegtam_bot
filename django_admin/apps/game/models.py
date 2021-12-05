@@ -7,6 +7,7 @@ from django_admin.apps.poll.models import Member
 
 class QuestionCategory(models.Model):
     """Категории вопросов."""
+
     title = models.CharField("Название", max_length=32)
 
     class Meta:
@@ -17,13 +18,15 @@ class QuestionCategory(models.Model):
     def __str__(self):
         return self.title
 
+
 class Question(models.Model):
     """Вопросы для интерактива."""
+
     DIFFICULTY = (
-        (1, 'Легкая'),
-        (2, 'Средняя'),
-        (3, 'Сложная'),
-        (4, 'Эксперт'),
+        (1, "Легкая"),
+        (2, "Средняя"),
+        (3, "Сложная"),
+        (4, "Эксперт"),
     )
 
     text = models.TextField("Текст вопроса", max_length=4096)
@@ -31,8 +34,14 @@ class Question(models.Model):
     add_date = models.DateTimeField("Дата создания", auto_now_add=True)
     update_date = models.DateTimeField("Дата изменения", auto_now=True)
     cash = models.CharField("Кэш фото", max_length=128, null=True)
-    category = models.ForeignKey(QuestionCategory, on_delete=models.CASCADE, verbose_name='Тема теста', related_name='question', null=True)
-    difficulty = models.IntegerField('Сложность', choices=DIFFICULTY)
+    category = models.ForeignKey(
+        QuestionCategory,
+        on_delete=models.CASCADE,
+        verbose_name="Тема теста",
+        related_name="question",
+        null=True,
+    )
+    difficulty = models.IntegerField("Сложность", choices=DIFFICULTY)
     owner = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -41,7 +50,7 @@ class Question(models.Model):
         default=1,
         related_name="game_question",
     )
-    is_active = models.BooleanField('Активный', default=True)
+    is_active = models.BooleanField("Активный", default=True)
     picture = models.ImageField(
         "Изображение",
         upload_to="game_picture/%Y/%m/%d",
@@ -49,7 +58,7 @@ class Question(models.Model):
         blank=True,
         default=None,
         max_length=1024,
-        validators=(FileExtensionValidator(['jpg', 'jpeg', 'png']),)
+        validators=(FileExtensionValidator(["jpg", "jpeg", "png"]),),
     )
 
     class Meta:
@@ -104,9 +113,20 @@ class Answer(models.Model):
 
 class MemberCategoryScore(models.Model):
     """Количество баллов пользователя по теме."""
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, verbose_name="Пользователь", related_name='score')
-    category = models.ForeignKey(QuestionCategory, on_delete=models.CASCADE, verbose_name='Тема теста', related_name='score')
-    amount = models.IntegerField('Количество баллов', default=0)
+
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь",
+        related_name="score",
+    )
+    category = models.ForeignKey(
+        QuestionCategory,
+        on_delete=models.CASCADE,
+        verbose_name="Тема теста",
+        related_name="score",
+    )
+    amount = models.IntegerField("Количество баллов", default=0)
 
     class Meta:
         verbose_name = "Баллы пользователей"

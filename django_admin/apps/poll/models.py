@@ -6,6 +6,7 @@ from django_admin.apps.useradmin.models import Member
 
 class Poll(models.Model):
     """Темы обучения."""
+
     title = models.CharField("Название", max_length=200)
 
     class Meta:
@@ -19,30 +20,42 @@ class Poll(models.Model):
 
 class Lesson(models.Model):
     """Уроки."""
+
     DIFFICULTY = (
-        (1, 'Легкая'),
-        (2, 'Средняя'),
-        (3, 'Сложная'),
-        (4, 'Эксперт'),
+        (1, "Легкая"),
+        (2, "Средняя"),
+        (3, "Сложная"),
+        (4, "Эксперт"),
     )
     title = models.CharField("Название", max_length=200)
     poll = models.ForeignKey(
         "Poll", on_delete=models.PROTECT, related_name="lesson", verbose_name="Тема"
     )
-    difficulty = models.IntegerField('Сложность', choices=DIFFICULTY)
+    difficulty = models.IntegerField("Сложность", choices=DIFFICULTY)
 
     class Meta:
         verbose_name = "урок"
         verbose_name_plural = "уроки"
 
     def __str__(self):
-        return self.title + ' ' + self.poll.title + " " + self.DIFFICULTY[self.difficulty-1][1]
+        return (
+            self.title
+            + " "
+            + self.poll.title
+            + " "
+            + self.DIFFICULTY[self.difficulty - 1][1]
+        )
 
 
 class Question(models.Model):
-    """Текст обучения. """
+    """Текст обучения."""
+
     lesson = models.ForeignKey(
-        "Lesson", on_delete=models.PROTECT, related_name="question", verbose_name="Урок", null=True
+        "Lesson",
+        on_delete=models.PROTECT,
+        related_name="question",
+        verbose_name="Урок",
+        null=True,
     )
     text = models.TextField("Текст вопроса", max_length=4096)
     options = models.ForeignKey(
@@ -134,5 +147,3 @@ class Answer(models.Model):
         return f"""Опрос:{self.poll.pk},
                пользователь: {self.member.name}, 
                дата: {self.date.strftime('%d.%m.%y %H:%M')}"""
-
-

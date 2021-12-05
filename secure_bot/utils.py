@@ -44,7 +44,6 @@ class BotState(StatesGroup):
     NEWLESSON = State()
 
 
-
 async def delete_main_message(user_id: int, main_id: int):
     """Удаление главного сообщения."""
     try:
@@ -69,11 +68,9 @@ async def create_pin_message(user_id: int, main_id: int) -> types.Message:
         chat_id=user_id,
         text=text_pin[0][0],
         parse_mode=types.ParseMode.MARKDOWN,
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
     )
-    await dp.bot.pin_chat_message(
-        user_id,
-        mes.message_id)
+    await dp.bot.pin_chat_message(user_id, mes.message_id)
     return mes
 
 
@@ -97,7 +94,9 @@ async def call_main(user_id: int):
                 text=liters.MAIN_MENU + " ",
                 reply_markup=markup.INLINE_KB_MAIN,
             )
-            await async_db.insert_or_update_main(user_id=user_id, main_id=mes.message_id)
+            await async_db.insert_or_update_main(
+                user_id=user_id, main_id=mes.message_id
+            )
             return main_id
 
 
@@ -138,9 +137,11 @@ def edit_pin_message(user_list: QuerySet, text: str):
                 loop.run_until_complete(
                     state.update_data(first_message=main_id.message_id)
                 )
-                loop.run_until_complete(async_db.insert_or_update_state(
-                    user_id=user.member_id, main_id=main_id, pin_id=pin.message_id
-                ))
+                loop.run_until_complete(
+                    async_db.insert_or_update_state(
+                        user_id=user.member_id, main_id=main_id, pin_id=pin.message_id
+                    )
+                )
 
 
 async def valid_parse_mode(func, *args, **kwargs):
@@ -151,4 +152,3 @@ async def valid_parse_mode(func, *args, **kwargs):
         kwargs["parse_mode"] = None
         result = await func(*args, **kwargs)
     return result
-
