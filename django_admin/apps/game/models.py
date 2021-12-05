@@ -53,8 +53,8 @@ class Question(models.Model):
     )
 
     class Meta:
-        verbose_name = "вопрос к обучению"
-        verbose_name_plural = "вопросы к обучению"
+        verbose_name = "вопрос"
+        verbose_name_plural = "вопросы"
         ordering = ("add_date",)
 
     def __str__(self):

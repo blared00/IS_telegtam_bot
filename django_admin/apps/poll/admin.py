@@ -2,42 +2,49 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from .forms import QuestionForm
-from .models import Poll, Question, QuestionOptions, QuestionAnswer, Answer
+from .models import Poll, Question, QuestionOptions, QuestionAnswer, Answer, Lesson
 
 
-class InlineQuestionAdmin(admin.TabularInline):
-    """Варианты ответов на вопросы"""
-    model = Question
-    # readonly_fields = ('owner', )
-    extra = 0
-    exclude = ('owner', )
-    form = QuestionForm
+# class InlineQuestionAdmin(admin.TabularInline):
+#     """Варианты ответов на вопросы"""
+#     model = Question
+#     # readonly_fields = ('owner', )
+#     extra = 0
+#     exclude = ('owner', )
+#     form = QuestionForm
 
 
 @admin.register(Poll)
 class PollAdmin(admin.ModelAdmin):
-    """Опросы"""
+    """Темы"""
     list_display = ('title',)
-    inlines = (InlineQuestionAdmin, )
+    # inlines = (InlineQuestionAdmin, )
     ordering = ('id',)
 
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    """Темы"""
+    list_display = ('title', 'poll', 'difficulty')
+    # inlines = (InlineQuestionAdmin, )
+    ordering = ('id',)
 
 
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     """Вопросы"""
-    list_display = ('text', 'text_answer', 'poll', 'options', 'add_date', 'update_date', 'owner')
+    list_display = ('text', 'lesson', 'options', 'add_date', 'update_date', 'owner')
     exclude = ('owner',)
-    list_filter = ('poll',)
-    empty_value_display = 'Пользователь удален'
+    list_filter = ('lesson',)
+    # empty_value_display = 'Пользователь удален'
 
     def save_model(self, request, obj, form, change):
         obj.owner = request.user
         super().save_model(request, obj, form, change)
 
 
-# @admin.register(QuestionOptions)
+@admin.register(QuestionOptions)
 class QuestionOptionsAdmin(admin.ModelAdmin):
     """Варианты ответов на вопросы"""
     list_display = ('text_key', 'count_key',)
@@ -48,7 +55,7 @@ class QuestionOptionsAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(Answer)
+# @admin.register(Answer)
 class QuestionAnswerAdmin(admin.ModelAdmin):
     """Ответы пользователей на опрос"""
     list_display = ('member_name', 'poll','question_answer', 'date')

@@ -1,3 +1,5 @@
 /.env
 /.idea
 /venv
+/django_admin/static/
+/django_admin/apps/call_support/

@@ -5,26 +5,46 @@ from django_admin.apps.useradmin.models import Member
 
 
 class Poll(models.Model):
-    """Темы тестов."""
+    """Темы обучения."""
     title = models.CharField("Название", max_length=200)
 
     class Meta:
-        verbose_name = "Темы тестов"
-        verbose_name_plural = "Темы тестов"
+        verbose_name = "тему обучения"
+        verbose_name_plural = "темы обучения"
         db_table = "polls"
 
     def __str__(self):
         return self.title
 
 
-class Question(models.Model):
-    """Вопросы для опроса."""
-
+class Lesson(models.Model):
+    """Уроки."""
+    DIFFICULTY = (
+        (1, 'Легкая'),
+        (2, 'Средняя'),
+        (3, 'Сложная'),
+        (4, 'Эксперт'),
+    )
+    title = models.CharField("Название", max_length=200)
     poll = models.ForeignKey(
-        "Poll", on_delete=models.PROTECT, related_name="question", verbose_name="Опрос"
+        "Poll", on_delete=models.PROTECT, related_name="lesson", verbose_name="Тема"
+    )
+    difficulty = models.IntegerField('Сложность', choices=DIFFICULTY)
+
+    class Meta:
+        verbose_name = "урок"
+        verbose_name_plural = "уроки"
+
+    def __str__(self):
+        return self.title + ' ' + self.poll.title + " " + self.DIFFICULTY[self.difficulty-1][1]
+
+
+class Question(models.Model):
+    """Текст обучения. """
+    lesson = models.ForeignKey(
+        "Lesson", on_delete=models.PROTECT, related_name="question", verbose_name="Урок", null=True
     )
     text = models.TextField("Текст вопроса", max_length=4096)
-    text_answer = models.BooleanField(verbose_name="Возможен ответ текстом?")
     options = models.ForeignKey(
         "QuestionOptions", on_delete=models.PROTECT, verbose_name="Варианты ответа"
     )
@@ -40,12 +60,12 @@ class Question(models.Model):
     )
 
     class Meta:
-        verbose_name = "вопрос к опросу"
-        verbose_name_plural = "вопросы"
+        verbose_name = "текст обучения"
+        verbose_name_plural = "тексты обучения"
         ordering = ("add_date", "pk")
 
     def __str__(self):
-        return self.text + f" (Опрос - {str(self.poll.pk)}"
+        return self.text
 
 
 class QuestionOptions(models.Model):
@@ -59,8 +79,8 @@ class QuestionOptions(models.Model):
     )
 
     class Meta:
-        verbose_name = "кнопки ответов"
-        verbose_name_plural = "кнопки ответов"
+        verbose_name = "кнопки"
+        verbose_name_plural = "кнопки"
 
     def __str__(self):
         return f"{'| '.join(self.text_key.split(';'))}"
@@ -93,7 +113,7 @@ class QuestionAnswer(models.Model):
 
 
 class Answer(models.Model):
-    """Фиксация времени прохождения опроса пользователем."""
+    """Фиксация времени прохождения обучения."""
 
     poll = models.ForeignKey(
         Poll, on_delete=models.PROTECT, verbose_name="Опрос", related_name="poll_answer"
