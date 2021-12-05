@@ -1,3 +1,5 @@
+from aiogram.utils.exceptions import TelegramAPIError
+
 import async_db
 import markup
 import liters
@@ -5,7 +7,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from create_bot import dp
-from utils import BotState, POLL_STATE, CONNECT_POLL, create_pin_message
+from utils import BotState, create_pin_message, call_main
 
 
 @dp.callback_query_handler(
@@ -27,18 +29,18 @@ async def go_to_mainmenu(callback_query: types.CallbackQuery, state: FSMContext)
         main_id=new_mes.message_id,
         state="BotState:MAIN",
     )
-
+    await BotState.MAIN.set()
     await state.update_data(
         first_message=new_mes.message_id, pin_message=mes.message_id
     )
 
 
 @dp.callback_query_handler(
-    lambda c: c.data == '2_6_week',
+    lambda c: c.data == 'ofcourse_btn',
     state=BotState.ACCEPT_NAME,
 )
 async def how_long_work(callback_query: types.CallbackQuery, state: FSMContext):
-    """Начинает опрос в соответствии с выбранным вариантом ответа
+    """Начинает тестирование
     _____
     Кнопки:
     Срабатывание - "Конечно"
@@ -48,22 +50,29 @@ async def how_long_work(callback_query: types.CallbackQuery, state: FSMContext):
     """
     await callback_query.answer()
     await state.update_data(how_long_work=callback_query.data)
-    poll_id = CONNECT_POLL[callback_query.data]
-    poll = await async_db.select_poll(poll_id=poll_id)
-    question_id, poll_first_question, count_key, key_options, text_answer = poll[0]
+    questions_list = []
+    cat_id = 1
+    request_q = await async_db.seclect_cup_question(cat_id)
+    if request_q:
+        for q in request_q:
+            questions_list.append(tuple(q))
+
+    question_id, text, description = tuple(questions_list.pop())
+    options = await async_db.seclect_options_question(question_id)
+    print(list(map(lambda x: x[1], options)))
     await callback_query.message.edit_text(
-        poll_first_question.capitalize(),
-        reply_markup=markup.range_inline_kb(count_key, "p", key_options.split(";")),
+        text,
+        reply_markup=markup.range_inline_kb(len(options), "g",list(map(lambda x: x[1], options))),
         parse_mode=types.ParseMode.MARKDOWN,
         disable_web_page_preview=True,
     )
-    await state.update_data(poll_question=0, poll=tuple(map(lambda x: tuple(x), poll)), poll_id=poll_id)
-    await POLL_STATE[callback_query.data].set()
+    await state.update_data(first_test=tuple(map(lambda x: tuple(x), questions_list)))
+    await BotState.EDUCATION.set()
 
 
 @dp.callback_query_handler(
-    lambda c: c.data in map(lambda x: str(x) + "p", range(1, 6)),
-    state=(BotState.POLL1, BotState.POLL2, BotState.POLL3),
+    lambda c: c.data in map(lambda x: str(x) + "g", range(1, 6)),
+    state=BotState.EDUCATION
 )
 async def poll_func_kb(callback_query: types.CallbackQuery, state: FSMContext):
     """Записывает результат ответа на предыдущий вопрос в БД , выдает новый вопрос.
@@ -73,110 +82,30 @@ async def poll_func_kb(callback_query: types.CallbackQuery, state: FSMContext):
     Срабатывание - Кнопки опросов (1, 2, 3 и т.д)
     Создает - Новый вопрос по списку.
     """
-    await callback_query.bot.answer_callback_query(callback_query.id)
+    await callback_query.answer()
     user_data = await state.get_data()
-    await async_db.insert_answer(
-        user_id=user_data["user_id"],
-        question_id=user_data["poll"][user_data["poll_question"]][0],
-        answer=callback_query.data.replace("p", ""),
-    )
-    await state.update_data(
-        poll_question=user_data["poll_question"] + 1,
-    )
-    user_data = await state.get_data()
-
+    question_list =list(user_data['first_test'])
     try:
-        question_id, question, count_key, key_options, text_answer = user_data["poll"][
-            user_data["poll_question"]
-        ]
+        question_id, text, description = question_list.pop()
+        options = await async_db.seclect_options_question(question_id)
         await callback_query.message.edit_text(
-            question,
-            reply_markup=markup.range_inline_kb(count_key, "p", key_options.split(";")),
+            text,
+            reply_markup=markup.range_inline_kb(len(options), "g", list(map(lambda x: x[1], options))),
             parse_mode=types.ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
-
+        await state.update_data(first_test=question_list)
     except IndexError:
-        await async_db.insert_poll_answer(
-            user_id=user_data["user_id"], poll_id=user_data["poll_id"]
-        )
+        await BotState.MAIN.set()
+        await callback_query.message.delete()
         mes = await create_pin_message(
             callback_query.message.chat.id, callback_query.message.message_id
         )
-        new_mes = await dp.bot.send_message(
-            callback_query.from_user.id,
-            text=liters.CONGRATULATION + "\n\n" + liters.MAIN_MENU,
+        new_mes = await callback_query.bot.send_message(
+            callback_query.message.chat.id,
+            'Ты хорошо отвечал, но все же необходимо подкрепить свои знания для повышения уровня\n' + liters.MAIN_MENU,
             reply_markup=markup.INLINE_KB_MAIN,
-        )
-
-        await BotState.MAIN.set()
-        await async_db.insert_or_update_state(
-            user_id=callback_query.from_user.id,
-            main_id=new_mes.message_id,
-            pin_id=mes.message_id,
-            state="BotState:MAIN",
         )
         await state.update_data(
             first_message=new_mes.message_id, pin_message=mes.message_id
         )
-
-
-@dp.message_handler(state=(BotState.POLL1, BotState.POLL2, BotState.POLL3))
-async def poll_func_ms(message: types.Message, state: FSMContext):
-    """Записывает текст сообщения как ответ, если вопрос подразумевает ответ сообщением, если нет, то удаляет
-    сообщение пользователя"""
-    user_data = await state.get_data()
-    if user_data["poll"][user_data["poll_question"]][4]:
-        await async_db.insert_answer(
-            user_id=user_data["user_id"],
-            question_id=user_data["poll"][user_data["poll_question"]][0],
-            answer=message.text,
-        )
-        await state.update_data(
-            poll_question=user_data["poll_question"] + 1,
-        )
-        user_data = await state.get_data()
-        try:
-            question_id, question, count_key, key_options, text_answer = user_data[
-                "poll"
-            ][user_data["poll_question"]]
-            await message.bot.edit_message_text(
-                question,
-                message.from_user.id,
-                user_data["first_message"],
-                reply_markup=markup.range_inline_kb(
-                    count_key, "p", key_options.split(";")
-                ),
-                parse_mode=types.ParseMode.MARKDOWN,
-                disable_web_page_preview=True,
-            )
-            await message.delete()
-        except IndexError:
-            await async_db.insert_poll_answer(
-                user_id=user_data["user_id"], poll_id=user_data["poll_id"]
-            )
-            mes = await create_pin_message(message.chat.id, message.message_id)
-            new_mes = await dp.bot.send_message(
-                message.chat.id,
-                text=liters.CONGRATULATION + "\n\n" + liters.MAIN_MENU,
-                reply_markup=markup.INLINE_KB_MAIN,
-            )
-
-            await BotState.MAIN.set()
-            await async_db.insert_or_update_state(
-                user_id=message.chat.id,
-                main_id=new_mes.message_id,
-                pin_id=mes.message_id,
-                state="BotState:MAIN",
-            )
-            await state.update_data(
-                first_message=new_mes.message_id, pin_message=mes.message_id
-            )
-            await message.delete()
-            await async_db.insert_or_update_main(
-                user_id=message.from_user.id,
-                main_id=user_data["first_message"],
-                state=await state.get_state(),
-            )
-    else:
-        await message.delete()

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from django_admin.apps.game.models import Question, QuestionOptions, QuestionCategory
+from django_admin.apps.game.models import Question, QuestionOptions, QuestionCategory, MemberCategoryScore
 
 
 class QuestionOptionsAdmin(admin.TabularInline):
@@ -16,6 +16,7 @@ class QuestionAdmin(admin.ModelAdmin):
     inlines = (QuestionOptionsAdmin, )
     readonly_fields = ('get_picture', )
     exclude = ('owner', 'cash')
+    list_filter = ('category',)
 
     ordering = ('-is_active', 'add_date',)
 
@@ -36,7 +37,14 @@ class QuestionAdmin(admin.ModelAdmin):
             return mark_safe(f'<img src="{obj.picture.url}" style="max-width:600px;width:100%">')
         return ''
 
+
 @admin.register(QuestionCategory)
-class QuestionCategory(admin.ModelAdmin):
+class QuestionCategoryAdmin(admin.ModelAdmin):
+    """Отображение категорий вопросов в панели администратора."""
+    pass
+
+
+@admin.register(MemberCategoryScore)
+class QMemberCategoryScoreAdmin(admin.ModelAdmin):
     """Отображение категорий вопросов в панели администратора."""
     pass

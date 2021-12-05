@@ -5,7 +5,6 @@ from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDelet
 import async_db
 import markup
 import liters
-from settings import BASE_DIR
 from utils import BotState
 from create_bot import dp
 
@@ -18,14 +17,8 @@ async def start_messages(message: types.Message, state: FSMContext):
     -Привет.
     """
     args = message.get_args()
-    user = await async_db.select_operator(args)
-    if user:
-        await message.answer(
-            liters.WELCOME_ADMIN.format(*user), parse_mode=types.ParseMode.MARKDOWN
-        )
-        await async_db.update_operator(tg_id=message.from_user.id, username=user[0])
-        await BotState.ADMIN.set()
-    elif args == "Pzs6_Gxa":
+
+    if args == "Pzs6_Gxa":
         new_mes = await message.answer(
             liters.WELCOME1,
             reply_markup=markup.INLINE_KB_WELCOME,
@@ -59,7 +52,7 @@ async def request_name(message: types.Message, state: FSMContext):
     """Запись имени пользователя.
     ____
     Кнопки:
-    Создает - "Конечно".
+    Создает - "Конечно", "Начать с азов".
     """
     name = message.text
     await async_db.insert_user(
@@ -111,8 +104,6 @@ async def restart(message: types.Message, state: FSMContext):
         BotState.STATE_0,
         BotState.ACCEPT_NAME,
         BotState.GAME,
-        BotState.NEWSLETTER,
-        BotState.NOTIFICATION,
     ),
 )
 async def del_waste(message: types.Message):
